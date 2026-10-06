@@ -1,4 +1,5 @@
 import React from 'react';
+import { getDocumentStatus } from '../utils/statusEngine';
 import { translations } from '../i18n/translations';
 
 /**
@@ -6,6 +7,7 @@ import { translations } from '../i18n/translations';
  * Allows mapping non-duplicate uploaded PDF files to specific tender requirements.
  * Enforces one-to-one mapping (one file can only map to one requirement at a time)
  * and dynamically reveals an expiry date picker whenever a requirement has `has_expiry === true`.
+ * Integrates statusEngine to render real-time compliance badges next to each requirement.
  */
 export default function MatchingEngine({
   requirements = [],
@@ -14,7 +16,8 @@ export default function MatchingEngine({
   matches = {},
   onMatchChange,
   expiryDates = {},
-  onExpiryDateChange
+  onExpiryDateChange,
+  submissionDeadline = '2026-11-15'
 }) {
   const t = translations[language] || translations.en;
 
@@ -32,6 +35,44 @@ export default function MatchingEngine({
     return mappedIds;
   };
 
+  // Status badge style helper
+  const renderStatusBadge = (statusObj) => {
+    switch (statusObj.status) {
+      case 'OK':
+        return (
+          <span className="px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full flex items-center gap-1 shadow-xs">
+            ✓ {t.statusOk}
+          </span>
+        );
+      case 'Missing':
+        return (
+          <span className="px-2.5 py-1 text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full flex items-center gap-1 shadow-xs">
+            🚫 {t.statusMissing}
+          </span>
+        );
+      case 'Expired':
+        return (
+          <span className="px-2.5 py-1 text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full flex items-center gap-1 shadow-xs">
+            ⚠️ {t.statusExpired}
+          </span>
+        );
+      case 'Expiry date needed':
+        return (
+          <span className="px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 rounded-full flex items-center gap-1 shadow-xs">
+            📅 {t.statusExpiryNeeded}
+          </span>
+        );
+      case 'Not provided':
+        return (
+          <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-300 rounded-full flex items-center gap-1">
+            ℹ️ {t.statusNotProvided}
+          </span>
+        );
+      default:
+        return <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-700">{statusObj.status}</span>;
+    }
+  };
+
   if (requirements.length === 0) {
     return null;
   }
@@ -39,7 +80,7 @@ export default function MatchingEngine({
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-8">
       {/* Header Banner */}
-      <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
+      <div className="p-6 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-lg bg-blue-600 text-white text-lg">🔗</span>
@@ -68,6 +109,14 @@ export default function MatchingEngine({
           const mappedElsewhereSet = getMappedFileIds(reqId);
           const expiryDateValue = expiryDates[reqId] || '';
 
+          // Evaluate live status using statusEngine
+          const statusObj = getDocumentStatus(
+            req,
+            selectedFile,
+            expiryDateValue,
+            submissionDeadline
+          );
+
           return (
             <div
               key={reqId}
@@ -78,9 +127,9 @@ export default function MatchingEngine({
               }`}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Requirement Info */}
+                {/* Requirement Info & Live Status Badge */}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="text-xs font-bold text-slate-400">
                       #{idx + 1}
                     </span>
@@ -105,6 +154,11 @@ export default function MatchingEngine({
                         📅 {t.expiryRequired}
                       </span>
                     )}
+
+                    {/* LIVE STATUS BADGE FROM STATUSENGINE */}
+                    <div className="ml-auto md:ml-2">
+                      {renderStatusBadge(statusObj)}
+                    </div>
                   </div>
 
                   {req.description && (
