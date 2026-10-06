@@ -35,6 +35,15 @@ export const translations = {
     mapped: "Mapped",
     clearMapping: "Clear",
 
+    // Package Generator
+    generateTitle: "Compile & Export Tender Package PDF",
+    generateSubtitle: "Generate an official submission PDF containing an English Cover Page, Document Index, appended files, and footer page stamps.",
+    generateButton: "Generate Package PDF",
+    generating: "Building PDF & Stamping Footers...",
+    blockedNotice: "Generation Disabled: Resolve all blocking issues (Missing, Expired, Expiry Date Needed) to enable package download.",
+    readyNotice: "All requirements verified! Ready to compile and export official tender package PDF.",
+    toastGenerateSuccess: "Tender Package PDF compiled & downloaded successfully!",
+
     // Tender Details & Requirements
     tenderDetailsTitle: "Tender Details & Compliance Engine",
     procurementTitle: "Procurement Title",
@@ -105,6 +114,15 @@ export const translations = {
     unmapped: "সংযুক্ত নয়",
     mapped: "সংযুক্ত",
     clearMapping: "মুছুন",
+
+    // Package Generator
+    generateTitle: "টেন্ডার প্যাকেজ PDF কম্পাইল ও এক্সপোর্ট করুন",
+    generateSubtitle: "ইংরেজি কভার পেজ, ডকুমেন্ট ইনডেক্স, যুক্ত নথি এবং ফুটার পেজ স্ট্যাম্প সহ অফিসিয়াল টেন্ডার প্যাকেজ PDF তৈরি করুন।",
+    generateButton: "প্যাকেজ PDF ডাউনলোড করুন",
+    generating: "PDF ফাইল তৈরি ও ফুটার স্ট্যাম্প যুক্ত করা হচ্ছে...",
+    blockedNotice: "ডাউনলোড স্থগিত: প্যাকেজ তৈরি করতে অনুপলব্ধ বা মেয়াদোত্তীর্ণ তথ্যের সমাধান করুন।",
+    readyNotice: "সকল প্রয়োজনীয় নথি যাচাই সম্পন্ন হয়েছে! অফিসিয়াল টেন্ডার প্যাকেজ ডাউনলোড করতে প্রস্তুত।",
+    toastGenerateSuccess: "টেন্ডার প্যাকেজ PDF সফলভাবে তৈরি ও ডাউনলোড সম্পন্ন হয়েছে!",
 
     // Tender Details & Requirements
     tenderDetailsTitle: "টেন্ডারের বিস্তারিত ও প্রয়োজনীয় তথ্যাবলী",

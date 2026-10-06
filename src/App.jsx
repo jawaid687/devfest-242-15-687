@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TenderDetails from './components/TenderDetails';
 import MatchingEngine from './components/MatchingEngine';
+import PackageGenerator from './components/PackageGenerator';
 import Uploader from './components/Uploader';
 import { calculateFileHash } from './utils/fileHasher';
 import { getPdfPageCount } from './utils/pdfUtils';
@@ -17,7 +18,7 @@ import {
  * App Main Component
  * Manages global application state, bilingual dictionary context, localStorage sync,
  * background SHA-256 duplicate hashing, pdfjs-dist page counting, MatchingEngine,
- * and toast notifications.
+ * pdf-lib PackageGenerator, and toast notifications.
  */
 function App() {
   // ---------------------------------------------------------------------------
@@ -287,7 +288,19 @@ function App() {
           onMatchChange={handleMatchChange}
           expiryDates={expiryDates}
           onExpiryDateChange={handleExpiryDateChange}
+          submissionDeadline={tenderDetails?.submission_deadline || '2026-11-15'}
           language={language}
+        />
+
+        {/* pdf-lib Tender Package Export Component */}
+        <PackageGenerator
+          tenderDetails={tenderDetails}
+          requirements={requirements}
+          uploadedFiles={uploadedFiles}
+          matches={matches}
+          expiryDates={expiryDates}
+          language={language}
+          showToast={showToast}
         />
 
         {/* File Uploader & Document Analysis Section */}
