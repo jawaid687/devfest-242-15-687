@@ -208,12 +208,12 @@ function App() {
   return (
     <div className='min-h-screen bg-slate-50 text-slate-900 p-8 font-sans'>
       {/* Top Header Bar */}
-      <div className="max-w-4xl mx-auto mb-8 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-wrap justify-between items-center gap-4">
+      <div className="max-w-4xl mx-auto mb-8 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex flex-wrap justify-between items-center gap-4">
         <div>
-          <div className="inline-block px-2 py-0.5 text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 rounded mb-1">
+          <div className="inline-block px-2.5 py-0.5 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 rounded-full mb-1.5 shadow-2xs">
             TP-SYSTEM
           </div>
-          <h1 className="text-xl font-bold text-slate-900 m-0">
+          <h1 className="text-xl font-bold text-slate-900 m-0 tracking-tight">
             {t.appTitle}
           </h1>
           <p className="text-xs text-slate-500 m-0 mt-0.5">
@@ -224,7 +224,7 @@ function App() {
         <div>
           <button
             onClick={() => setLanguage(l => l === 'en' ? 'bn' : 'en')}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-md transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl shadow-2xs hover:shadow-xs transition-all duration-300 ease-in-out cursor-pointer active:scale-95"
           >
             {t.toggleLanguage}
           </button>
@@ -235,11 +235,11 @@ function App() {
       <div>
         {/* If no requirements.json uploaded yet, display clear guidance banner */}
         {!hasTenderLoaded && (
-          <div className="max-w-4xl mx-auto p-6 bg-white border border-blue-200 rounded-xl text-center shadow-sm mb-8">
+          <div className="max-w-4xl mx-auto p-8 bg-white border border-blue-200/80 rounded-2xl text-center shadow-md hover:shadow-lg transition-all duration-300 ease-in-out mb-8">
             <h2 className="text-sm font-bold text-slate-900 m-0">
               {t.uploadJsonFirstTitle}
             </h2>
-            <p className="text-xs text-slate-600 m-0 mt-1 max-w-md mx-auto">
+            <p className="text-xs text-slate-600 m-0 mt-1.5 max-w-md mx-auto leading-relaxed">
               {t.uploadJsonFirstDesc}
             </p>
           </div>
@@ -296,7 +296,7 @@ function App() {
 
       {/* Floating Notification */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg shadow-lg border text-xs font-semibold max-w-sm ${
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl shadow-xl border text-xs font-semibold max-w-sm transition-all duration-300 ease-in-out animate-fade-in ${
           toast.type === 'warning'
             ? 'bg-amber-50 text-amber-900 border-amber-300'
             : toast.type === 'error'
