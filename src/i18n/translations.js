@@ -20,10 +20,21 @@ export const translations = {
     jsonBadge: "JSON SPEC",
     removeFile: "Remove",
     noFilesUploaded: "No documents uploaded yet. Drop PDF files above to analyze pages and detect duplicates.",
-    duplicateAlert: "Warning: Duplicate file detected based on SHA-256 hash hash match!",
+    duplicateAlert: "Warning: Duplicate file detected based on SHA-256 hash match!",
     duplicateBanner: "Duplicate File Detected",
     duplicateBannerDesc: "This file has identical binary content to an already uploaded document.",
     
+    // Matching Engine
+    matchingEngineTitle: "Document Matching Engine",
+    matchingEngineSubtitle: "Map unique uploaded PDF documents to specific tender requirements and specify document expiry dates.",
+    selectFilePlaceholder: "-- Select a document --",
+    mappedAlready: "(Mapped elsewhere)",
+    expiryDateLabel: "Document Expiry Date",
+    selectExpiryPrompt: "Select Expiry Date...",
+    unmapped: "Unmapped",
+    mapped: "Mapped",
+    clearMapping: "Clear",
+
     // Tender Details & Requirements
     tenderDetailsTitle: "Tender Details & Compliance Engine",
     procurementTitle: "Procurement Title",
@@ -83,6 +94,17 @@ export const translations = {
     duplicateAlert: "সতর্কতা: SHA-256 হ্যাশ মিলে যাওয়ায় ডুপ্লিকেট ফাইল সনাক্ত হয়েছে!",
     duplicateBanner: "ডুপ্লিকেট ফাইল সনাক্ত হয়েছে",
     duplicateBannerDesc: "এই ফাইলটির বিষয়বস্তু পূর্বের একটি আপলোডকৃত ফাইলের সাথে সম্পূর্ণ হুবহু মিলে গেছে।",
+
+    // Matching Engine
+    matchingEngineTitle: "ডকুমেন্ট ম্যাপিং ইঞ্জিন",
+    matchingEngineSubtitle: "আপলোডকৃত অনন্য ফাইলসমূহকে নির্দিষ্ট রিকোয়ারমেন্টের সাথে ম্যাপিং করুন এবং মেয়াদের তারিখ নির্ধারণ করুন।",
+    selectFilePlaceholder: "-- কোনো নথি নির্বাচন করুন --",
+    mappedAlready: "(অন্যত্র সংযুক্ত)",
+    expiryDateLabel: "নথির মেয়াদের তারিখ",
+    selectExpiryPrompt: "মেয়াদের তারিখ নির্ধারণ করুন...",
+    unmapped: "সংযুক্ত নয়",
+    mapped: "সংযুক্ত",
+    clearMapping: "মুছুন",
 
     // Tender Details & Requirements
     tenderDetailsTitle: "টেন্ডারের বিস্তারিত ও প্রয়োজনীয় তথ্যাবলী",

@@ -1,28 +1,33 @@
 # Tender Package Builder & Compliance Engine
 
-A modern, client-side Single Page Application (React + Vite) designed to streamline tender document verification, cryptographic duplicate detection, and automated compliance checking.
+A modern, client-side Single Page Application (React + Vite) designed to streamline tender document verification, cryptographic duplicate detection, interactive document matching, and automated compliance checking.
 
 ---
 
 ## 🚀 Main Features
 
-1. **SHA-256 Cryptographic Hashing & Duplicate Detection**:
-   - Uses the native browser Web Crypto API (`crypto.subtle.digest('SHA-256')`) to compute binary hashes of uploaded PDF buffers.
+1. **Interactive Document Matching Engine (`MatchingEngine.jsx`)**:
+   - Maps unique uploaded PDF documents to specific tender requirements via interactive dropdowns.
+   - Excludes duplicate files (`isDuplicate: true`) from mapping options.
+   - Enforces 1-to-1 mapping constraints so a single file cannot be mapped to multiple requirements simultaneously.
+   - Dynamically reveals an expiry date picker whenever a requirement specifies `has_expiry === true`.
+
+2. **SHA-256 Cryptographic Hashing & Duplicate Detection**:
+   - Uses native browser Web Crypto API (`crypto.subtle.digest('SHA-256')`) to compute binary hashes of uploaded PDF buffers.
    - Automatically detects duplicate files across uploads and within multi-file selection batches, highlighting duplicate files with high-visibility flags.
 
-2. **Silent Background PDF Page Counting**:
+3. **Silent Background PDF Page Counting**:
    - Integrates `pdfjs-dist` to parse uploaded PDF documents silently in the background.
    - Extracts total page counts for every uploaded document without blocking the UI rendering thread.
 
-3. **Automated Tender Compliance & Status Engine**:
-   - Compares uploaded documents against tender requirements.
-   - Evaluates mandatory vs optional documents, expiry dates against submission deadlines, and generates statuses (`OK`, `Missing`, `Expired`, `Expiry Date Needed`, `Not Provided`).
+4. **Automated Tender Compliance & Status Engine**:
+   - Compares matched documents and selected expiry dates against submission deadlines to compute real-time statuses (`OK`, `Missing`, `Expired`, `Expiry Date Needed`, `Not Provided`).
 
-4. **LocalStorage Persistence & Instant Demo Data**:
-   - State automatically persists across browser refreshes via `localStorage`.
+5. **LocalStorage Persistence & Instant Demo Data**:
+   - State automatically persists across browser refreshes via `localStorage` (storing `uploadedFiles`, `matches`, `expiryDates`, `tenderDetails`, `requirements`).
    - Populates rich sample data on first load so judges never see a blank screen.
 
-5. **Centralized Bilingual Support (English & Bangla)**:
+6. **Centralized Bilingual Support (English & Bangla)**:
    - Built-in central translation dictionary supporting English (`en`) and Bangla (`bn`).
    - Highly visible language switcher in the main header bar.
 
@@ -31,7 +36,7 @@ A modern, client-side Single Page Application (React + Vite) designed to streaml
 ## ⭐ Bonus Features
 
 - **Drag & Drop Dropzone**: Interactive dropzone supporting multi-file selection with active drag state and background processing spinner overlays.
-- **Toast Notification System**: Self-dismissing toast alerts for file uploads, JSON specification loads, and duplicate file warnings.
+- **Toast Notification System**: Self-dismissing toast alerts for file uploads, JSON specification loads, mapping changes, and duplicate file warnings.
 - **One-Click SHA-256 Hash Copy**: Allows copying truncated SHA-256 hex hashes to clipboard.
 - **Demo Reset Functionality**: Instant button to reset demo state back to standard sample tender data for live testing.
 
@@ -39,7 +44,7 @@ A modern, client-side Single Page Application (React + Vite) designed to streaml
 
 ## 💡 Most Useful Prompt
 
-> "Update App.jsx and Uploader.jsx to process the uploaded PDFs. When a PDF is uploaded, use the native crypto.subtle.digest('SHA-256') to generate a hash of the file buffer to detect duplicates. Then, use pdfjs-dist to silently load the PDF in the background and count the total number of pages. Store this data (file, name, pageCount, hash, isDuplicate) in the uploadedFiles state array. Ensure the UI clearly flags any file marked as isDuplicate"
+> "Create a new component called MatchingEngine.jsx. It should take requirements, uploadedFiles, and language as props. For each requirement, render a dropdown containing the uploadedFiles (exclude duplicates) so the user can map a file to a document. Ensure one file can only map to one requirement. If a requirement has has_expiry === true, dynamically reveal a date input field for the user to select an expiry date. Store these mappings in matches and expiryDates state objects in App.jsx."
 
 ---
 

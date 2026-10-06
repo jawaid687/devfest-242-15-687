@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { getDocumentStatus } from '../utils/statusEngine';
 import { translations } from '../i18n/translations';
 
 /**
  * TenderDetails Component
  * Displays tender metadata and evaluates requirement document status using statusEngine.
- * Allows users to assign expiry dates to uploaded files and view real-time compliance results.
+ * Uses matches and expiryDates from state to display real-time compliance results.
  */
 export default function TenderDetails({ 
   tenderDetails, 
   requirements = [], 
   uploadedFiles = [], 
+  matches = {},
+  expiryDates = {},
   language = 'en' 
 }) {
   const t = translations[language] || translations.en;
-  const [expiryDates, setExpiryDates] = useState({});
 
   if (!tenderDetails) {
     return (
@@ -26,10 +27,6 @@ export default function TenderDetails({
       </div>
     );
   }
-
-  const handleDateChange = (reqId, dateStr) => {
-    setExpiryDates(prev => ({ ...prev, [reqId]: dateStr }));
-  };
 
   // Status badge style mapper
   const getStatusBadge = (statusObj) => {
@@ -76,7 +73,7 @@ export default function TenderDetails({
         </div>
       </div>
 
-      {/* Requirements Checklist Table */}
+      {/* Requirements Compliance Summary Table */}
       <div className="p-6">
         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <span>{t.requirementChecklist}</span>
@@ -98,13 +95,11 @@ export default function TenderDetails({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {requirements.map((req, idx) => {
-                // Try matching uploaded files by name or index
-                const matchedFile = uploadedFiles.find(f => 
-                  f.name.toLowerCase().includes(req.name.split(' ')[0].toLowerCase()) ||
-                  f.name.toLowerCase().includes(req.name.split(' ')[1]?.toLowerCase() || '')
-                ) || uploadedFiles[idx] || null;
+                const reqId = String(req.id || idx);
+                const matchedFileId = matches[reqId];
+                const matchedFile = uploadedFiles.find(f => String(f.id) === String(matchedFileId));
+                const expiryDate = expiryDates[reqId] || '';
 
-                const expiryDate = expiryDates[req.id] || matchedFile?.expiryDate || '';
                 const statusObj = getDocumentStatus(
                   req,
                   matchedFile,
@@ -113,7 +108,7 @@ export default function TenderDetails({
                 );
 
                 return (
-                  <tr key={req.id || idx} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={reqId} className="hover:bg-slate-50/70 transition-colors">
                     {/* Requirement Name */}
                     <td className="px-4 py-3.5">
                       <div className="font-semibold text-slate-800">
@@ -139,19 +134,16 @@ export default function TenderDetails({
                       )}
                     </td>
 
-                    {/* Expiry Required */}
+                    {/* Expiry Required & Selected Date */}
                     <td className="px-4 py-3.5 text-center">
                       {req.has_expiry ? (
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex flex-col items-center gap-0.5">
                           <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800 rounded">
                             {t.expiryRequired}
                           </span>
-                          <input
-                            type="date"
-                            value={expiryDate}
-                            onChange={(e) => handleDateChange(req.id, e.target.value)}
-                            className="text-xs border border-slate-300 rounded px-1.5 py-0.5 focus:ring-1 focus:ring-blue-500"
-                          />
+                          <span className="text-xs font-mono text-slate-600">
+                            {expiryDate || '(Not set)'}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-xs text-slate-400">{t.expiryNotRequired}</span>
@@ -166,14 +158,9 @@ export default function TenderDetails({
                           <span className="truncate max-w-[180px]" title={matchedFile.name}>
                             {matchedFile.name}
                           </span>
-                          {matchedFile.isDuplicate && (
-                            <span className="text-[10px] bg-rose-600 text-white font-bold px-1 rounded">
-                              DUP
-                            </span>
-                          )}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">No document matched</span>
+                        <span className="text-xs text-slate-400 italic">No document mapped</span>
                       )}
                     </td>
 

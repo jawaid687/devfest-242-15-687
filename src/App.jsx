@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TenderDetails from './components/TenderDetails';
+import MatchingEngine from './components/MatchingEngine';
 import Uploader from './components/Uploader';
 import { calculateFileHash } from './utils/fileHasher';
 import { getPdfPageCount } from './utils/pdfUtils';
@@ -7,13 +8,16 @@ import { translations } from './i18n/translations';
 import { 
   INITIAL_SAMPLE_TENDER, 
   INITIAL_SAMPLE_REQUIREMENTS, 
-  INITIAL_SAMPLE_UPLOADED_FILES 
+  INITIAL_SAMPLE_UPLOADED_FILES,
+  INITIAL_SAMPLE_MATCHES,
+  INITIAL_SAMPLE_EXPIRY_DATES
 } from './utils/sampleData';
 
 /**
  * App Main Component
  * Manages global application state, bilingual dictionary context, localStorage sync,
- * background SHA-256 duplicate hashing, pdfjs-dist page counting, and toast notifications.
+ * background SHA-256 duplicate hashing, pdfjs-dist page counting, MatchingEngine,
+ * and toast notifications.
  */
 function App() {
   // ---------------------------------------------------------------------------
@@ -43,6 +47,18 @@ function App() {
     return saved ? JSON.parse(saved) : INITIAL_SAMPLE_UPLOADED_FILES;
   });
 
+  // Mappings State ({ [reqId]: fileId })
+  const [matches, setMatches] = useState(() => {
+    const saved = localStorage.getItem('matches');
+    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_MATCHES;
+  });
+
+  // Expiry Dates State ({ [reqId]: dateString })
+  const [expiryDates, setExpiryDates] = useState(() => {
+    const saved = localStorage.getItem('expiryDates');
+    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_EXPIRY_DATES;
+  });
+
   // Processing & Toast UI States
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState(null);
@@ -57,11 +73,13 @@ function App() {
     localStorage.setItem('app_language', language);
     localStorage.setItem('tenderDetails', JSON.stringify(tenderDetails));
     localStorage.setItem('requirements', JSON.stringify(requirements));
+    localStorage.setItem('matches', JSON.stringify(matches));
+    localStorage.setItem('expiryDates', JSON.stringify(expiryDates));
     
     // Strip non-serializable raw File objects before storing in localStorage
     const serializableFiles = uploadedFiles.map(({ file, ...rest }) => rest);
     localStorage.setItem('uploadedFiles', JSON.stringify(serializableFiles));
-  }, [language, tenderDetails, requirements, uploadedFiles]);
+  }, [language, tenderDetails, requirements, matches, expiryDates, uploadedFiles]);
 
   /**
    * Helper function to show self-dismissing toast notifications.
@@ -71,6 +89,26 @@ function App() {
     setTimeout(() => {
       setToast(null);
     }, 4500);
+  };
+
+  /**
+   * Handles mapping changes from MatchingEngine.
+   */
+  const handleMatchChange = (reqId, fileId) => {
+    setMatches(prev => ({
+      ...prev,
+      [reqId]: fileId
+    }));
+  };
+
+  /**
+   * Handles expiry date changes from MatchingEngine.
+   */
+  const handleExpiryDateChange = (reqId, dateStr) => {
+    setExpiryDates(prev => ({
+      ...prev,
+      [reqId]: dateStr
+    }));
   };
 
   // ---------------------------------------------------------------------------
@@ -157,10 +195,22 @@ function App() {
   };
 
   /**
-   * Removes a file from the uploadedFiles state array.
+   * Removes a file from uploadedFiles state and unlinks any active requirement mapping.
    */
   const handleRemoveFile = (id) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
+    
+    // Remove matches pointing to deleted file
+    setMatches(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(reqId => {
+        if (next[reqId] === id) {
+          delete next[reqId];
+        }
+      });
+      return next;
+    });
+
     showToast(t.toastFileRemoved, 'info');
   };
 
@@ -171,6 +221,8 @@ function App() {
     setTenderDetails(INITIAL_SAMPLE_TENDER);
     setRequirements(INITIAL_SAMPLE_REQUIREMENTS);
     setUploadedFiles(INITIAL_SAMPLE_UPLOADED_FILES);
+    setMatches(INITIAL_SAMPLE_MATCHES);
+    setExpiryDates(INITIAL_SAMPLE_EXPIRY_DATES);
     showToast('Reset to initial sample data', 'info');
   };
 
@@ -222,6 +274,19 @@ function App() {
           tenderDetails={tenderDetails}
           requirements={requirements}
           uploadedFiles={uploadedFiles}
+          matches={matches}
+          expiryDates={expiryDates}
+          language={language}
+        />
+
+        {/* Interactive Matching Engine Component */}
+        <MatchingEngine
+          requirements={requirements}
+          uploadedFiles={uploadedFiles}
+          matches={matches}
+          onMatchChange={handleMatchChange}
+          expiryDates={expiryDates}
+          onExpiryDateChange={handleExpiryDateChange}
           language={language}
         />
 

@@ -57,8 +57,7 @@ export const INITIAL_SAMPLE_UPLOADED_FILES = [
     hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     isDuplicate: false,
     size: 245760,
-    uploadedAt: "2026-10-06T10:00:00.000Z",
-    expiryDate: "2027-05-30"
+    uploadedAt: "2026-10-06T10:00:00.000Z"
   },
   {
     id: "sample_file_2",
@@ -67,8 +66,7 @@ export const INITIAL_SAMPLE_UPLOADED_FILES = [
     hash: "88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589",
     isDuplicate: false,
     size: 112640,
-    uploadedAt: "2026-10-06T10:05:00.000Z",
-    expiryDate: "2026-12-31"
+    uploadedAt: "2026-10-06T10:05:00.000Z"
   },
   {
     id: "sample_file_3",
@@ -77,8 +75,7 @@ export const INITIAL_SAMPLE_UPLOADED_FILES = [
     hash: "88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589",
     isDuplicate: true,
     size: 112640,
-    uploadedAt: "2026-10-06T10:10:00.000Z",
-    expiryDate: "2026-12-31"
+    uploadedAt: "2026-10-06T10:10:00.000Z"
   },
   {
     id: "sample_file_4",
@@ -90,3 +87,14 @@ export const INITIAL_SAMPLE_UPLOADED_FILES = [
     uploadedAt: "2026-10-06T10:15:00.000Z"
   }
 ];
+
+export const INITIAL_SAMPLE_MATCHES = {
+  req_1: "sample_file_1",
+  req_2: "sample_file_2",
+  req_3: "sample_file_4"
+};
+
+export const INITIAL_SAMPLE_EXPIRY_DATES = {
+  req_1: "2027-05-30",
+  req_2: "2026-12-31"
+};
