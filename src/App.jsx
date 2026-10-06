@@ -6,95 +6,96 @@ import Uploader from './components/Uploader';
 import { calculateFileHash } from './utils/fileHasher';
 import { getPdfPageCount } from './utils/pdfUtils';
 import { translations } from './i18n/translations';
-import { 
-  INITIAL_SAMPLE_TENDER, 
-  INITIAL_SAMPLE_REQUIREMENTS, 
-  INITIAL_SAMPLE_UPLOADED_FILES,
-  INITIAL_SAMPLE_MATCHES,
-  INITIAL_SAMPLE_EXPIRY_DATES
-} from './utils/sampleData';
 
 /**
  * App Main Component
- * Manages global application state, bilingual dictionary context, localStorage sync,
- * background SHA-256 duplicate hashing, pdfjs-dist page counting, MatchingEngine,
- * pdf-lib PackageGenerator, and toast notifications.
+ * Clean enterprise light layout designed for non-technical office workers.
+ * Fully dynamic: Only renders tender details and requirements once requirements.json is uploaded.
+ * All state persists to browser localStorage with no hardcoded fallback demo data.
  */
 function App() {
-  // ---------------------------------------------------------------------------
-  // STATE INITIALIZATION WITH LOCALSTORAGE FALLBACK & SAMPLE DATA
-  // ---------------------------------------------------------------------------
-  
+  // Purge any lingering legacy demo data from localStorage on initialization
+  if (typeof window !== 'undefined') {
+    const rawTender = localStorage.getItem('tenderDetails');
+    if (rawTender && rawTender.includes('IFT-2024-DEV-8891')) {
+      localStorage.removeItem('tenderDetails');
+      localStorage.removeItem('requirements');
+      localStorage.removeItem('matches');
+      localStorage.removeItem('expiryDates');
+      localStorage.removeItem('uploadedFiles');
+    }
+  }
+
   // Language State ('en' | 'bn')
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('app_language') || 'en';
   });
 
-  // Tender Metadata State
+  // Tender Metadata State (strictly parsed from user's requirements.json)
   const [tenderDetails, setTenderDetails] = useState(() => {
     const saved = localStorage.getItem('tenderDetails');
-    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_TENDER;
+    return saved ? JSON.parse(saved) : null;
   });
 
-  // Requirements List State
+  // Requirements List State (strictly parsed from user's requirements.json)
   const [requirements, setRequirements] = useState(() => {
     const saved = localStorage.getItem('requirements');
-    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_REQUIREMENTS;
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // Uploaded Files State Array (Contains: id, file, name, pageCount, hash, isDuplicate, size, uploadedAt)
+  // Uploaded Files State Array
   const [uploadedFiles, setUploadedFiles] = useState(() => {
     const saved = localStorage.getItem('uploadedFiles');
-    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_UPLOADED_FILES;
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // Mappings State ({ [reqId]: fileId })
+  // Requirement-to-File Mappings State ({ [reqId]: fileId })
   const [matches, setMatches] = useState(() => {
     const saved = localStorage.getItem('matches');
-    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_MATCHES;
+    return saved ? JSON.parse(saved) : {};
   });
 
   // Expiry Dates State ({ [reqId]: dateString })
   const [expiryDates, setExpiryDates] = useState(() => {
     const saved = localStorage.getItem('expiryDates');
-    return saved ? JSON.parse(saved) : INITIAL_SAMPLE_EXPIRY_DATES;
+    return saved ? JSON.parse(saved) : {};
   });
 
-  // Processing & Toast UI States
+  // UI Processing and Toast States
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState(null);
 
   const t = translations[language] || translations.en;
 
-  // ---------------------------------------------------------------------------
-  // LOCALSTORAGE PERSISTENCE HOOK
-  // Synchronizes state to browser localStorage whenever data changes.
-  // ---------------------------------------------------------------------------
+  // LocalStorage Persistence Hook
   useEffect(() => {
     localStorage.setItem('app_language', language);
-    localStorage.setItem('tenderDetails', JSON.stringify(tenderDetails));
-    localStorage.setItem('requirements', JSON.stringify(requirements));
+    if (tenderDetails) {
+      localStorage.setItem('tenderDetails', JSON.stringify(tenderDetails));
+    } else {
+      localStorage.removeItem('tenderDetails');
+    }
+
+    if (requirements.length > 0) {
+      localStorage.setItem('requirements', JSON.stringify(requirements));
+    } else {
+      localStorage.removeItem('requirements');
+    }
+
     localStorage.setItem('matches', JSON.stringify(matches));
     localStorage.setItem('expiryDates', JSON.stringify(expiryDates));
-    
-    // Strip non-serializable raw File objects before storing in localStorage
+
     const serializableFiles = uploadedFiles.map(({ file, ...rest }) => rest);
     localStorage.setItem('uploadedFiles', JSON.stringify(serializableFiles));
   }, [language, tenderDetails, requirements, matches, expiryDates, uploadedFiles]);
 
-  /**
-   * Helper function to show self-dismissing toast notifications.
-   */
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
-    }, 4500);
+    }, 4000);
   };
 
-  /**
-   * Handles mapping changes from MatchingEngine.
-   */
   const handleMatchChange = (reqId, fileId) => {
     setMatches(prev => ({
       ...prev,
@@ -102,9 +103,6 @@ function App() {
     }));
   };
 
-  /**
-   * Handles expiry date changes from MatchingEngine.
-   */
   const handleExpiryDateChange = (reqId, dateStr) => {
     setExpiryDates(prev => ({
       ...prev,
@@ -113,53 +111,52 @@ function App() {
   };
 
   // ---------------------------------------------------------------------------
-  // FILE PROCESSING ENGINE
-  // Handles multi-file uploads, computes SHA-256 hash via crypto.subtle.digest,
-  // runs silent background page counts using pdfjs-dist, and flags duplicates.
+  // DYNAMIC FILE PROCESSING ENGINE
+  // Extracts tender specification from uploaded requirements.json and processes PDFs
   // ---------------------------------------------------------------------------
   const handleFilesSelected = async (files) => {
     setIsProcessing(true);
     const newFilesBatch = [];
-
-    // Track hashes to detect duplicates both against existing files and within current upload batch
     const existingHashes = new Set(uploadedFiles.map(f => f.hash));
     let hasDuplicateInBatch = false;
 
     try {
       for (const file of files) {
-        // 1. Process JSON Tender Specification Files
+        // 1. Process requirements.json Tender Specification
         if (file.name.endsWith('.json')) {
           try {
             const text = await file.text();
             const data = JSON.parse(text);
-            if (data.tender && data.requirements) {
-              setTenderDetails(data.tender);
-              setRequirements(data.requirements);
+
+            const parsedTender = data.tender || (data.requirements ? data : null);
+            const parsedReqs = data.requirements || [];
+
+            if (parsedTender && Array.isArray(parsedReqs) && parsedReqs.length > 0) {
+              setTenderDetails(parsedTender);
+              setRequirements(parsedReqs);
+              // Clear previous matches when a new JSON tender is uploaded
+              setMatches({});
+              setExpiryDates({});
               showToast(t.toastJsonSuccess, 'success');
             } else {
               showToast(t.toastInvalidFile, 'error');
             }
           } catch (err) {
             console.error('JSON parsing error:', err);
-            showToast(t.toastInvalidFile, 'error');
+            showToast('Invalid JSON file format.', 'error');
           }
         } 
         // 2. Process PDF Documents with SHA-256 Hashing & pdfjs-dist Page Counting
         else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-          // Step A: Calculate native Web Crypto SHA-256 hash & extract ArrayBuffer
           const { hash, arrayBuffer } = await calculateFileHash(file);
-
-          // Step B: Check if hash already exists in uploadedFiles or current batch
           const isDuplicate = existingHashes.has(hash);
           if (isDuplicate) {
             hasDuplicateInBatch = true;
           }
           existingHashes.add(hash);
 
-          // Step C: Silently load PDF in background using pdfjs-dist to count total pages
           const pageCount = await getPdfPageCount(arrayBuffer);
 
-          // Step D: Build file record object with all required metadata
           const fileRecord = {
             id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
             file,
@@ -177,10 +174,8 @@ function App() {
         }
       }
 
-      // Update state if new PDF files were processed
       if (newFilesBatch.length > 0) {
         setUploadedFiles(prev => [...prev, ...newFilesBatch]);
-        
         if (hasDuplicateInBatch) {
           showToast(t.toastDuplicateDetected, 'warning');
         } else {
@@ -195,13 +190,8 @@ function App() {
     }
   };
 
-  /**
-   * Removes a file from uploadedFiles state and unlinks any active requirement mapping.
-   */
   const handleRemoveFile = (id) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
-    
-    // Remove matches pointing to deleted file
     setMatches(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(reqId => {
@@ -211,126 +201,127 @@ function App() {
       });
       return next;
     });
-
     showToast(t.toastFileRemoved, 'info');
   };
 
-  /**
-   * Resets local state back to initial sample data for demonstration/testing.
-   */
-  const handleResetSampleData = () => {
-    setTenderDetails(INITIAL_SAMPLE_TENDER);
-    setRequirements(INITIAL_SAMPLE_REQUIREMENTS);
-    setUploadedFiles(INITIAL_SAMPLE_UPLOADED_FILES);
-    setMatches(INITIAL_SAMPLE_MATCHES);
-    setExpiryDates(INITIAL_SAMPLE_EXPIRY_DATES);
-    showToast('Reset to initial sample data', 'info');
-  };
+  const hasTenderLoaded = Boolean(tenderDetails && requirements.length > 0);
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-800 pb-16">
-      {/* Navigation Header */}
-      <header className="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg text-white shadow-md">
+    <div className="min-h-screen bg-slate-50/70 text-slate-800 pb-16 font-sans">
+      {/* Clean Enterprise Light Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-5 py-3 flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-bold text-xs text-white shadow-2xs">
               TP
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-100 tracking-tight">
+              <h1 className="text-sm font-bold text-slate-800 leading-tight">
                 {t.appTitle}
               </h1>
-              <p className="text-xs text-slate-400">
-                AI & Cryptographic Tender Compliance Platform
+              <p className="text-[11px] text-slate-500">
+                {t.appSubtitle}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Reset Sample Data Button */}
-            <button
-              onClick={handleResetSampleData}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition-colors"
-              title="Reset state to initial sample data"
-            >
-              🔄 Reset Demo Data
-            </button>
-
+          <div className="flex items-center gap-2">
             {/* Language Toggle Button */}
             <button
               onClick={() => setLanguage(l => l === 'en' ? 'bn' : 'en')}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-2"
+              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-medium rounded shadow-2xs transition-colors flex items-center gap-1.5"
             >
-              <span>🌐</span>
+              <span className="text-xs">🌐</span>
               <span>{t.toggleLanguage}</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-6 pt-8 space-y-8">
-        {/* Tender Specification & Compliance Checklist */}
-        <TenderDetails
-          tenderDetails={tenderDetails}
-          requirements={requirements}
-          uploadedFiles={uploadedFiles}
-          matches={matches}
-          expiryDates={expiryDates}
-          language={language}
-        />
+      {/* Main Container */}
+      <main className="max-w-5xl mx-auto px-5 pt-6 space-y-6">
+        {/* If no requirements.json uploaded yet, display clear guidance banner */}
+        {!hasTenderLoaded && (
+          <div className="p-5 bg-white border border-blue-200 rounded-lg text-center shadow-2xs">
+            <div className="mx-auto w-8 h-8 mb-2 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+              <span className="text-sm">📋</span>
+            </div>
+            <h2 className="text-sm font-bold text-slate-800">
+              {t.uploadJsonFirstTitle}
+            </h2>
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+              {t.uploadJsonFirstDesc}
+            </p>
+          </div>
+        )}
 
-        {/* Interactive Matching Engine Component */}
-        <MatchingEngine
-          requirements={requirements}
-          uploadedFiles={uploadedFiles}
-          matches={matches}
-          onMatchChange={handleMatchChange}
-          expiryDates={expiryDates}
-          onExpiryDateChange={handleExpiryDateChange}
-          submissionDeadline={tenderDetails?.submission_deadline || '2026-11-15'}
-          language={language}
-        />
+        {/* Dynamic Rendering: ONLY render TenderDetails, MatchingEngine, and PackageGenerator when JSON is uploaded */}
+        {hasTenderLoaded && (
+          <>
+            {/* 1. Tender Specifications */}
+            <TenderDetails
+              tenderDetails={tenderDetails}
+              requirements={requirements}
+              uploadedFiles={uploadedFiles}
+              matches={matches}
+              expiryDates={expiryDates}
+              language={language}
+            />
 
-        {/* pdf-lib Tender Package Export Component */}
-        <PackageGenerator
-          tenderDetails={tenderDetails}
-          requirements={requirements}
-          uploadedFiles={uploadedFiles}
-          matches={matches}
-          expiryDates={expiryDates}
-          language={language}
-          showToast={showToast}
-        />
+            {/* 2. Document Matching Engine */}
+            <MatchingEngine
+              requirements={requirements}
+              uploadedFiles={uploadedFiles}
+              matches={matches}
+              onMatchChange={handleMatchChange}
+              expiryDates={expiryDates}
+              onExpiryDateChange={handleExpiryDateChange}
+              submissionDeadline={tenderDetails?.submission_deadline || ''}
+              language={language}
+            />
 
-        {/* File Uploader & Document Analysis Section */}
+            {/* 3. Package Generator */}
+            <PackageGenerator
+              tenderDetails={tenderDetails}
+              requirements={requirements}
+              uploadedFiles={uploadedFiles}
+              matches={matches}
+              expiryDates={expiryDates}
+              language={language}
+              showToast={showToast}
+            />
+          </>
+        )}
+
+        {/* Document Uploader */}
         <Uploader
           onFilesSelected={handleFilesSelected}
           uploadedFiles={uploadedFiles}
           onRemoveFile={handleRemoveFile}
           isProcessing={isProcessing}
           language={language}
+          hasTenderLoaded={hasTenderLoaded}
         />
       </main>
 
-      {/* Floating Toast Notification */}
+      {/* Toast Notification */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 max-w-md px-5 py-3.5 rounded-xl shadow-2xl border flex items-center gap-3 animate-bounce-short transition-all ${
+        <div className={`fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-lg shadow-lg border text-xs font-medium flex items-center gap-2 max-w-sm ${
           toast.type === 'warning'
-            ? 'bg-amber-900 text-amber-100 border-amber-700'
+            ? 'bg-amber-50 text-amber-900 border-amber-300'
             : toast.type === 'error'
-            ? 'bg-rose-900 text-rose-100 border-rose-700'
+            ? 'bg-rose-50 text-rose-900 border-rose-300'
             : toast.type === 'success'
-            ? 'bg-emerald-900 text-emerald-100 border-emerald-700'
-            : 'bg-slate-900 text-slate-100 border-slate-700'
+            ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+            : 'bg-white text-slate-800 border-slate-300'
         }`}>
-          <span className="text-lg">
-            {toast.type === 'warning' ? '⚠️' : toast.type === 'error' ? '❌' : toast.type === 'success' ? '✓' : 'ℹ️'}
+          <span>
+            {toast.type === 'warning' ? '⚠' : toast.type === 'error' ? '✕' : toast.type === 'success' ? '✓' : 'ℹ'}
           </span>
-          <p className="text-xs font-semibold flex-1 leading-snug">{toast.message}</p>
+          <span className="flex-1">{toast.message}</span>
           <button 
             onClick={() => setToast(null)}
-            className="text-white/60 hover:text-white text-xs font-bold px-1"
+            className="text-slate-400 hover:text-slate-600 ml-1 text-xs"
           >
             ✕
           </button>

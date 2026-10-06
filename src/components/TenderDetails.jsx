@@ -4,8 +4,8 @@ import { translations } from '../i18n/translations';
 
 /**
  * TenderDetails Component
- * Displays tender metadata and evaluates requirement document status using statusEngine.
- * Uses matches and expiryDates from state to display real-time compliance results.
+ * Compact enterprise layout displaying tender metadata and requirement compliance summary.
+ * Light theme with clean borders and non-technical office worker friendly styling.
  */
 export default function TenderDetails({ 
   tenderDetails, 
@@ -17,80 +17,117 @@ export default function TenderDetails({
 }) {
   const t = translations[language] || translations.en;
 
-  if (!tenderDetails) {
-    return (
-      <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-400">
-        <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p className="text-sm font-medium">Upload requirements.json or click sample data to view compliance breakdown</p>
-      </div>
-    );
-  }
+  if (!tenderDetails) return null;
 
-  // Status badge style mapper
+  // Status badge styling helper
   const getStatusBadge = (statusObj) => {
     switch (statusObj.status) {
       case 'OK':
-        return <span className="px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full">✓ {t.statusOk}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+            ✓ {t.statusOk}
+          </span>
+        );
       case 'Missing':
-        return <span className="px-3 py-1 text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full">🚫 {t.statusMissing}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 rounded">
+            ✕ {t.statusMissing}
+          </span>
+        );
       case 'Expired':
-        return <span className="px-3 py-1 text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full">⚠️ {t.statusExpired}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-red-50 text-red-700 border border-red-200 rounded">
+            ⚠ {t.statusExpired}
+          </span>
+        );
       case 'Expiry date needed':
-        return <span className="px-3 py-1 text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 rounded-full">📅 {t.statusExpiryNeeded}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded">
+            📅 {t.statusExpiryNeeded}
+          </span>
+        );
       case 'Not provided':
-        return <span className="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-300 rounded-full">ℹ️ {t.statusNotProvided}</span>;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200 rounded">
+            ℹ {t.statusNotProvided}
+          </span>
+        );
       default:
-        return <span className="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700">{statusObj.status}</span>;
+        return (
+          <span className="inline-flex px-2 py-0.5 text-xs bg-slate-100 text-slate-700 rounded">
+            {statusObj.status}
+          </span>
+        );
     }
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-8">
-      {/* Header */}
-      <div className="p-6 bg-slate-900 text-white flex flex-wrap justify-between items-center gap-4">
+    <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden mb-6">
+      {/* Light Enterprise Header */}
+      <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-950 px-2.5 py-1 rounded border border-blue-800">
-            {tenderDetails.category || "Tender Overview"}
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+            {tenderDetails.category || "Tender Information"}
           </span>
-          <h2 className="text-xl font-bold mt-2 text-slate-50">
+          <h2 className="text-base font-bold text-slate-800 mt-1">
             {tenderDetails.title}
           </h2>
-          {tenderDetails.reference_no && (
-            <p className="text-xs text-slate-400 mt-1">Ref: {tenderDetails.reference_no}</p>
+          {(tenderDetails.reference_no || tenderDetails.tender_id) && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              Ref: <span className="font-mono text-slate-700">{tenderDetails.reference_no || tenderDetails.tender_id}</span>
+            </p>
           )}
         </div>
 
         <div className="text-right">
-          <div className="text-xs text-slate-400">{t.deadline}</div>
-          <div className="text-sm font-semibold text-amber-400">
-            {tenderDetails.submission_deadline}
+          <div className="text-[11px] font-medium text-slate-500 uppercase">{t.deadline}</div>
+          <div className="text-xs font-bold text-slate-800">
+            {tenderDetails.submission_deadline || "N/A"}
           </div>
           {tenderDetails.budget && (
-            <div className="text-xs text-slate-300 mt-0.5">Budget: {tenderDetails.budget}</div>
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              Budget: {tenderDetails.budget}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Requirements Compliance Summary Table */}
-      <div className="p-6">
-        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <span>{t.requirementChecklist}</span>
-          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-            {requirements.length} Requirements
-          </span>
+      {/* Metadata Detail Row */}
+      <div className="px-5 py-3 bg-white border-b border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div>
+          <span className="text-slate-400 block text-[11px]">Procuring Entity</span>
+          <span className="font-medium text-slate-700">{tenderDetails.procuring_entity || tenderDetails.category || "N/A"}</span>
+        </div>
+        <div>
+          <span className="text-slate-400 block text-[11px]">Bidder</span>
+          <span className="font-medium text-slate-700">{tenderDetails.bidder || "N/A"}</span>
+        </div>
+        <div>
+          <span className="text-slate-400 block text-[11px]">Total Requirements</span>
+          <span className="font-medium text-slate-700">{requirements.length}</span>
+        </div>
+        <div>
+          <span className="text-slate-400 block text-[11px]">Submission Status</span>
+          <span className="font-semibold text-blue-700">In Preparation</span>
+        </div>
+      </div>
+
+      {/* Requirements Summary Table */}
+      <div className="px-5 py-4">
+        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+          {t.requirementChecklist}
         </h3>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider border-b border-slate-200">
+        <div className="overflow-x-auto border border-slate-150 rounded">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3 font-semibold">{t.reqName}</th>
-                <th className="px-4 py-3 font-semibold text-center">{t.mandatory}</th>
-                <th className="px-4 py-3 font-semibold text-center">{t.expiryCheck}</th>
-                <th className="px-4 py-3 font-semibold">{t.matchedDoc}</th>
-                <th className="px-4 py-3 font-semibold text-center">{t.complianceStatus}</th>
+                <th className="px-3.5 py-2 font-semibold">#</th>
+                <th className="px-3.5 py-2 font-semibold">{t.reqName}</th>
+                <th className="px-3.5 py-2 font-semibold text-center">{t.mandatory}</th>
+                <th className="px-3.5 py-2 font-semibold text-center">{t.expiryCheck}</th>
+                <th className="px-3.5 py-2 font-semibold">{t.matchedDoc}</th>
+                <th className="px-3.5 py-2 font-semibold text-center">{t.complianceStatus}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -108,64 +145,48 @@ export default function TenderDetails({
                 );
 
                 return (
-                  <tr key={reqId} className="hover:bg-slate-50/70 transition-colors">
-                    {/* Requirement Name */}
-                    <td className="px-4 py-3.5">
-                      <div className="font-semibold text-slate-800">
-                        {language === 'bn' && req.title_bn ? req.title_bn : req.name}
-                      </div>
+                  <tr key={reqId} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-3.5 py-2 text-slate-400 font-mono text-[11px]">
+                      {idx + 1}
+                    </td>
+                    <td className="px-3.5 py-2 font-medium text-slate-800">
+                      <div>{language === 'bn' && req.title_bn ? req.title_bn : req.name}</div>
                       {req.description && (
-                        <div className="text-xs text-slate-400 mt-0.5 max-w-sm">
+                        <div className="text-[11px] text-slate-400 max-w-sm truncate" title={req.description}>
                           {req.description}
                         </div>
                       )}
                     </td>
-
-                    {/* Mandatory / Optional */}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-3.5 py-2 text-center">
                       {req.mandatory ? (
-                        <span className="px-2 py-0.5 text-[11px] font-bold bg-rose-100 text-rose-800 rounded">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded">
                           {t.mandatoryReq}
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-600 rounded">
+                        <span className="px-1.5 py-0.5 text-[10px] text-slate-600 bg-slate-100 rounded">
                           {t.optionalReq}
                         </span>
                       )}
                     </td>
-
-                    {/* Expiry Required & Selected Date */}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-3.5 py-2 text-center">
                       {req.has_expiry ? (
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className="px-2 py-0.5 text-[11px] font-semibold bg-amber-100 text-amber-800 rounded">
-                            {t.expiryRequired}
-                          </span>
-                          <span className="text-xs font-mono text-slate-600">
-                            {expiryDate || '(Not set)'}
-                          </span>
-                        </div>
+                        <span className="text-[11px] text-amber-700 font-medium">
+                          {expiryDate ? expiryDate : 'Required'}
+                        </span>
                       ) : (
-                        <span className="text-xs text-slate-400">{t.expiryNotRequired}</span>
+                        <span className="text-slate-400 text-[11px]">N/A</span>
                       )}
                     </td>
-
-                    {/* Matched File */}
-                    <td className="px-4 py-3.5">
+                    <td className="px-3.5 py-2">
                       {matchedFile ? (
-                        <div className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                          <span className="text-blue-600 font-bold">📄</span>
-                          <span className="truncate max-w-[180px]" title={matchedFile.name}>
-                            {matchedFile.name}
-                          </span>
-                        </div>
+                        <span className="font-mono text-slate-700 text-[11px] truncate max-w-[150px] inline-block" title={matchedFile.name}>
+                          {matchedFile.name}
+                        </span>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">No document mapped</span>
+                        <span className="text-slate-400 italic text-[11px]">Unmapped</span>
                       )}
                     </td>
-
-                    {/* Compliance Status Badge */}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-3.5 py-2 text-center">
                       {getStatusBadge(statusObj)}
                     </td>
                   </tr>
