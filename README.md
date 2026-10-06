@@ -6,13 +6,15 @@ A professional, client-side Single Page Application (React + Vite) designed for 
 
 ## 🚀 Main Features
 
-1. **Dynamic JSON Tender Loading (Zero Hardcoded Data)**:
-   - The application strictly operates on user-uploaded `requirements.json` files.
-   - Requirements, compliance checklists, matching engine, and package generator remain hidden until a valid `requirements.json` is provided.
+1. **Strictly Light Mode & Enterprise-Clean Layout**:
+   - Clean, light-themed, spacious enterprise layout suitable for non-technical office workers.
+   - Built with pure Tailwind CSS, no dark mode, and zero bloated SVG icons.
+   - Main wrapper styled with `min-h-screen bg-slate-50 text-slate-900 p-8 font-sans`.
+   - Spacious uploader container styled with `max-w-4xl mx-auto p-10 bg-white border-2 border-dashed border-slate-300 rounded-xl shadow-sm text-center mb-8`.
 
-2. **Clean Enterprise Light Layout**:
-   - Designed for non-technical office workers with clean typography, compact spacing, and a crisp neutral palette.
-   - All icons are strictly constrained to a maximum of `w-8 h-8` using Tailwind CSS.
+2. **Dynamic JSON Tender Loading (Zero Fake Data)**:
+   - Operates strictly on user-uploaded `requirements.json` files.
+   - Tender specifications, compliance checklist, matching engine, and package generator remain hidden until a valid `requirements.json` is uploaded.
 
 3. **Interactive Document Matching Engine (`MatchingEngine.jsx`)**:
    - Maps unique uploaded PDF documents to specific tender requirements via dropdown selectors.
@@ -48,24 +50,16 @@ A professional, client-side Single Page Application (React + Vite) designed for 
 
 ---
 
-## ⭐ Bonus Features
-
-- **Compact Drag & Drop Dropzone**: Streamlined dropzone supporting multi-file selection with loading overlays.
-- **Office-Friendly Toast System**: Lightweight notification alerts for file uploads, JSON specification loads, and duplicate warnings.
-- **Checksum Copy Tool**: Allows copying SHA-256 hex checksums to the clipboard.
-
----
-
 ## 💡 Most Useful Prompt
 
-> "You broke the UI scaling and injected fake data. Fix the UI styling across all components immediately. 1) Remove all massive SVG icons; restrict any necessary icons to a maximum of w-8 h-8 using Tailwind. 2) Remove the dark mode theme and replace it with a clean, light-themed, compact enterprise layout suitable for non-technical office workers. 3) CRITICAL: Completely remove the 'Reset Demo Data' feature and the hardcoded 'IFT-2024-DEV-8891' tender data. The app MUST ONLY render data dynamically parsed from the user-uploaded requirements.json. Do not render any requirements or tender details until a JSON file is uploaded."
+> "Your previous CSS update failed. The UI is still in dark mode and the SVGs are massive. Execute this EXACT hard-override immediately: 1. Delete ALL <svg> elements in Uploader.jsx and App.jsx. Do not use icons. Replace them with standard HTML text and a native <input type='file' multiple>. 2. Search for and DELETE every single bg-gray-800, bg-gray-900, bg-black, text-white, and dark: Tailwind class across the entire project. 3. Set the main App.jsx wrapper exactly to <div className='min-h-screen bg-slate-50 text-slate-900 p-8 font-sans'>. 4. Set the Uploader container exactly to <div className='max-w-4xl mx-auto p-10 bg-white border-2 border-dashed border-slate-300 rounded-xl shadow-sm text-center mb-8'>. Keep it strictly light mode, spacious, and enterprise-clean."
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **Framework**: React 19 + Vite
-- **Styling**: Tailwind CSS (Enterprise Light Theme)
+- **Styling**: Tailwind CSS (Tailwind v4 with `@tailwindcss/vite`, strictly light mode)
 - **PDF Compilation**: `pdf-lib`
 - **PDF Parsing**: `pdfjs-dist`
 - **Crypto Engine**: Web Crypto API (`crypto.subtle.digest`)
