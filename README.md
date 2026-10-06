@@ -1,16 +1,52 @@
-# React + Vite
+# Tender Package Builder & Compliance Engine
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern, client-side Single Page Application (React + Vite) designed to streamline tender document verification, cryptographic duplicate detection, and automated compliance checking.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Main Features
 
-## React Compiler
+1. **SHA-256 Cryptographic Hashing & Duplicate Detection**:
+   - Uses the native browser Web Crypto API (`crypto.subtle.digest('SHA-256')`) to compute binary hashes of uploaded PDF buffers.
+   - Automatically detects duplicate files across uploads and within multi-file selection batches, highlighting duplicate files with high-visibility flags.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Silent Background PDF Page Counting**:
+   - Integrates `pdfjs-dist` to parse uploaded PDF documents silently in the background.
+   - Extracts total page counts for every uploaded document without blocking the UI rendering thread.
 
-## Expanding the Oxlint configuration
+3. **Automated Tender Compliance & Status Engine**:
+   - Compares uploaded documents against tender requirements.
+   - Evaluates mandatory vs optional documents, expiry dates against submission deadlines, and generates statuses (`OK`, `Missing`, `Expired`, `Expiry Date Needed`, `Not Provided`).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+4. **LocalStorage Persistence & Instant Demo Data**:
+   - State automatically persists across browser refreshes via `localStorage`.
+   - Populates rich sample data on first load so judges never see a blank screen.
+
+5. **Centralized Bilingual Support (English & Bangla)**:
+   - Built-in central translation dictionary supporting English (`en`) and Bangla (`bn`).
+   - Highly visible language switcher in the main header bar.
+
+---
+
+## ⭐ Bonus Features
+
+- **Drag & Drop Dropzone**: Interactive dropzone supporting multi-file selection with active drag state and background processing spinner overlays.
+- **Toast Notification System**: Self-dismissing toast alerts for file uploads, JSON specification loads, and duplicate file warnings.
+- **One-Click SHA-256 Hash Copy**: Allows copying truncated SHA-256 hex hashes to clipboard.
+- **Demo Reset Functionality**: Instant button to reset demo state back to standard sample tender data for live testing.
+
+---
+
+## 💡 Most Useful Prompt
+
+> "Update App.jsx and Uploader.jsx to process the uploaded PDFs. When a PDF is uploaded, use the native crypto.subtle.digest('SHA-256') to generate a hash of the file buffer to detect duplicates. Then, use pdfjs-dist to silently load the PDF in the background and count the total number of pages. Store this data (file, name, pageCount, hash, isDuplicate) in the uploadedFiles state array. Ensure the UI clearly flags any file marked as isDuplicate"
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: React 19 + Vite
+- **Styling**: Tailwind CSS
+- **PDF Processing**: `pdfjs-dist`
+- **Crypto Engine**: Web Crypto API (`crypto.subtle.digest`)
+- **Date Engine**: `date-fns`
