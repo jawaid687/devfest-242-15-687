@@ -53,7 +53,8 @@ export default function PackageGenerator({
         requirements,
         uploadedFiles,
         matches,
-        expiryDates
+        expiryDates,
+        language
       });
 
       if (showToast) {
@@ -107,7 +108,7 @@ export default function PackageGenerator({
             <div className="mt-2 text-rose-800 space-y-1">
               {blockingIssues.map((req, i) => (
                 <div key={i}>
-                  • <strong>{language === 'bn' && req.title_bn ? req.title_bn : req.name}</strong>{' '}
+                  • <strong>{language === 'bn' ? (req.title_bn || req.title_en || req.name || req.title) : (req.title_en || req.name || req.title || req.title_bn)}</strong>{' '}
                   ({req.mandatory ? 'Mandatory file missing' : 'Expiry date required'})
                 </div>
               ))}

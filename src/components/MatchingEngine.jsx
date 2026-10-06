@@ -136,7 +136,9 @@ export default function MatchingEngine({
                       #{idx + 1}
                     </span>
                     <h3 className="text-sm font-semibold text-slate-900">
-                      {language === 'bn' && req.title_bn ? req.title_bn : req.name}
+                      {language === 'bn' 
+                        ? (req.title_bn || req.title_en || req.name || req.title || 'Document')
+                        : (req.title_en || req.name || req.title || req.title_bn || 'Document')}
                     </h3>
 
                     {/* Mandatory / Optional Badge */}
